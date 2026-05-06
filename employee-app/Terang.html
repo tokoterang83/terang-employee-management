@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Terang — Manajemen Karyawan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #EFEBE2; font-family: "Plus Jakarta Sans", -apple-system, system-ui, sans-serif; color: #2B362B; font-size: 14px; }
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar { display: none; }
+  button { font-family: inherit; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const PHONE_W = 390;
+const PHONE_H = 844;
+
+function Phone({ children }) {
+  return (
+    <div style={{
+      width: PHONE_W, height: PHONE_H, borderRadius: 44, overflow: 'hidden',
+      position: 'relative', background: '#FAF8F5',
+      border: '1px solid #DDD7C8',
+    }}>
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 118, height: 33, borderRadius: 24, background: '#2B362B', zIndex: 50,
+      }} />
+      {children}
+    </div>
+  );
+}
+
+function Browser({ children, w = 1280, h = 800, url = 'app.terang.id/dashboard' }) {
+  return (
+    <div style={{
+      width: w, height: h, borderRadius: 12, overflow: 'hidden',
+      background: '#FAF8F5', border: '1px solid #DDD7C8',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+        background: '#F4F1EA', borderBottom: '1px solid #E8E3D8' }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#D7C9B5' }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#D7C9B5' }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#D7C9B5' }} />
+        </div>
+        <div style={{ flex: 1, padding: '4px 12px', borderRadius: 5, background: '#FAF8F5', border: '1px solid #E8E3D8',
+          fontSize: 11, color: '#8B887D', fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          textAlign: 'center', maxWidth: 460, margin: '0 auto' }}>
+          {url}
+        </div>
+        <div style={{ width: 40 }} />
+      </div>
+      <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas title="Terang — Manajemen Karyawan" subtitle="Matched to guesthouse-pms · warm neutral + sage · Plus Jakarta Sans + JetBrains Mono">
+      <DCSection id="mobile" title="Mobile · 390 × 844">
+        <DCArtboard id="dashboard" label="01 · Dashboard Karyawan" width={PHONE_W} height={PHONE_H}>
+          <Phone><DashboardScreen /></Phone>
+        </DCArtboard>
+        <DCArtboard id="checklist" label="02 · Checklist Harian" width={PHONE_W} height={PHONE_H}>
+          <Phone><ChecklistScreen /></Phone>
+        </DCArtboard>
+        <DCArtboard id="profile" label="03 · Profil (Karyawan)" width={PHONE_W} height={PHONE_H}>
+          <Phone><ProfileScreen owner={false} /></Phone>
+        </DCArtboard>
+        <DCArtboard id="profile-owner" label="04 · Profil (Owner)" width={PHONE_W} height={PHONE_H}>
+          <Phone><ProfileScreen owner={true} /></Phone>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="desktop" title="Desktop · 1280 × 800 (Owner)">
+        <DCArtboard id="desktop-owner" label="05 · Dashboard Owner" width={1280} height={830}>
+          <Browser w={1280} h={830}><DesktopApp /></Browser>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
