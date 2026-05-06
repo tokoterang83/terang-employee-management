@@ -17,6 +17,8 @@ export async function createSopTemplate(
   const raw = {
     karyawan_id: formData.get("karyawan_id") as string,
     nama_sop: formData.get("nama_sop") as string,
+    sub_judul: (formData.get("sub_judul") as string) || null,
+    deskripsi: (formData.get("deskripsi") as string) || null,
   };
 
   const parsed = CreateSopTemplateSchema.safeParse(raw);

@@ -106,7 +106,7 @@ function ChecklistRow({
         </p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {isVerif && <Tag color="#586D57" bg="#E8EBE5" label="Terverifikasi" />}
-          {isRejected && <Tag color="#9C4A3A" bg="#EFD9D2" label="Ditolak owner" />}
+          {isRejected && <Tag color="#9C4A3A" bg="#EFD9D2" label="Ditolak Mas Arya/Mbak Syafira" />}
           {isChecked && !isVerif && !isRejected && (
             <Tag color="#4A6B8C" bg="#D9E2EC" label="Menunggu verifikasi" />
           )}

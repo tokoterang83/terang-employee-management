@@ -43,13 +43,13 @@ export default async function SopPage() {
       {/* Title */}
       <div className="px-5 pb-5 pt-5">
         <p className="font-mono text-[10.5px] font-semibold uppercase tracking-wider text-text-dim">
-          SOP Karyawan
+          SOP Anggota
         </p>
         <h1 className="mt-1 text-[24px] font-semibold leading-tight tracking-tight text-text">
           SOP & Checklist
         </h1>
         <p className="mt-1.5 text-[13px] text-text-sec">
-          {templates.length} SOP dibuat · {karyawanList.length} karyawan
+          {templates.length} SOP dibuat · {karyawanList.length} anggota
         </p>
       </div>
 

@@ -22,12 +22,16 @@ export const UpdateGajiPokokSchema = z.object({
 // ---- SOP Templates ----
 export const CreateSopTemplateSchema = z.object({
   karyawan_id: z.string().uuid("ID karyawan tidak valid"),
-  nama_sop: z.string().min(1, "Nama SOP wajib diisi"),
+  nama_sop: z.string().min(1, "Judul SOP wajib diisi"),
+  sub_judul: z.string().optional().nullable(),
+  deskripsi: z.string().optional().nullable(),
 });
 
 export const UpdateSopTemplateSchema = z.object({
   id: z.string().uuid(),
-  nama_sop: z.string().min(1, "Nama SOP wajib diisi"),
+  nama_sop: z.string().min(1, "Judul SOP wajib diisi"),
+  sub_judul: z.string().optional().nullable(),
+  deskripsi: z.string().optional().nullable(),
 });
 
 // ---- SOP Items ----

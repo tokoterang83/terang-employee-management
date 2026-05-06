@@ -97,9 +97,17 @@ function SopCard({
   return (
     <div className="rounded-[10px] border border-border bg-surface overflow-hidden">
       {/* Template header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-bg2" style={{ borderBottom: "1px solid #E8E3D8" }}>
-        <p className="text-[13.5px] font-semibold text-text">{template.nama_sop}</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between px-4 py-3 bg-bg2" style={{ borderBottom: "1px solid #E8E3D8" }}>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13.5px] font-semibold text-text">{template.nama_sop}</p>
+          {template.sub_judul && (
+            <p className="mt-0.5 text-[11.5px] font-medium text-sage">{template.sub_judul}</p>
+          )}
+          {template.deskripsi && (
+            <p className="mt-0.5 text-[11px] text-text-dim leading-relaxed">{template.deskripsi}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 ml-3 flex-shrink-0">
           <span className="font-mono text-[10px] text-text-dim">{items.length} item</span>
           <button
             onClick={handleDeleteTemplate}
@@ -177,10 +185,10 @@ export function SopManager({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Karyawan selector */}
+      {/* Anggota selector */}
       <div className="mx-5">
         <p className="mb-2 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-text-dim">
-          Pilih Karyawan
+          Pilih Anggota
         </p>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {karyawanList.map((k) => (
@@ -206,21 +214,34 @@ export function SopManager({
         {error && (
           <div className="mb-3 rounded-[8px] bg-danger-soft px-3 py-2 text-[12.5px] font-medium text-danger">{error}</div>
         )}
-        <form onSubmit={handleCreateTemplate} className="flex gap-2">
+        <form onSubmit={handleCreateTemplate} className="flex flex-col gap-2">
           <input type="hidden" name="karyawan_id" value={selectedKaryawan} />
           <input
             name="nama_sop"
             required
-            placeholder="Nama SOP (misal: SOP Pagi)"
-            className="flex-1 rounded-[8px] border border-border bg-bg2 px-3 py-2.5 text-[13px] text-text placeholder:text-text-mute focus:outline-none focus:ring-2 focus:ring-sage/20"
+            placeholder="Judul SOP (misal: SOP Pagi)"
+            className="rounded-[8px] border border-border bg-bg2 px-3 py-2.5 text-[13px] text-text placeholder:text-text-mute focus:outline-none focus:ring-2 focus:ring-sage/20"
+            disabled={isPending || !selectedKaryawan}
+          />
+          <input
+            name="sub_judul"
+            placeholder="Sub-judul (misal: Pembukaan Toko) — opsional"
+            className="rounded-[8px] border border-border bg-bg2 px-3 py-2.5 text-[13px] text-text placeholder:text-text-mute focus:outline-none focus:ring-2 focus:ring-sage/20"
+            disabled={isPending || !selectedKaryawan}
+          />
+          <textarea
+            name="deskripsi"
+            placeholder="Deskripsi singkat — opsional"
+            rows={2}
+            className="rounded-[8px] border border-border bg-bg2 px-3 py-2.5 text-[13px] text-text placeholder:text-text-mute focus:outline-none focus:ring-2 focus:ring-sage/20 resize-none"
             disabled={isPending || !selectedKaryawan}
           />
           <button
             type="submit"
             disabled={isPending || !selectedKaryawan}
-            className="flex items-center gap-1 rounded-[8px] bg-sage px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
+            className="flex items-center justify-center gap-1 rounded-[8px] bg-sage px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
           >
-            <PlusIcon /> Buat
+            <PlusIcon /> Buat SOP
           </button>
         </form>
       </div>
@@ -231,8 +252,8 @@ export function SopManager({
           <div className="rounded-[10px] border border-border bg-surface px-4 py-8 text-center">
             <p className="text-[13px] text-text-dim">
               {karyawanList.length === 0
-                ? "Belum ada karyawan terdaftar"
-                : "Belum ada SOP untuk karyawan ini"}
+                ? "Belum ada anggota terdaftar"
+                : "Belum ada SOP untuk anggota ini"}
             </p>
           </div>
         ) : (

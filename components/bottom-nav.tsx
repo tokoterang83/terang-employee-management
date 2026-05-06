@@ -65,7 +65,7 @@ const ownerItems = [
   {
     id: "karyawan",
     href: "/karyawan",
-    label: "Karyawan",
+    label: "Anggota",
     icon: UsersIcon,
   },
 ];

@@ -41,7 +41,7 @@ export function TambahKaryawanForm() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
-        Tambah Karyawan
+        Tambah Anggota
       </button>
     );
   }
@@ -49,7 +49,7 @@ export function TambahKaryawanForm() {
   return (
     <div className="overflow-hidden rounded-[10px] border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <p className="text-[13.5px] font-semibold text-text">Tambah Karyawan Baru</p>
+        <p className="text-[13.5px] font-semibold text-text">Tambah Anggota Baru</p>
         <button
           onClick={() => { setOpen(false); setError(null); setSuccess(false); }}
           className="flex h-7 w-7 items-center justify-center rounded-[6px] border border-border text-text-dim"
@@ -68,7 +68,7 @@ export function TambahKaryawanForm() {
         )}
         {success && (
           <div className="rounded-[8px] border border-sage-soft bg-sage-soft px-3 py-2.5 text-[12.5px] font-medium text-sage">
-            Karyawan berhasil ditambahkan!
+            Anggota berhasil ditambahkan!
           </div>
         )}
 
@@ -120,7 +120,7 @@ export function TambahKaryawanForm() {
           disabled={isPending}
           className="mt-1 rounded-[8px] bg-sage py-3 text-[13.5px] font-semibold text-white transition-opacity disabled:opacity-70 active:opacity-80"
         >
-          {isPending ? "Membuat akun..." : "Simpan Karyawan"}
+          {isPending ? "Membuat akun..." : "Simpan Anggota"}
         </button>
       </form>
     </div>

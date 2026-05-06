@@ -19,6 +19,8 @@ export interface SopTemplate {
   id: string;
   karyawan_id: string;
   nama_sop: string;
+  sub_judul: string | null;
+  deskripsi: string | null;
   created_at: string;
 }
 

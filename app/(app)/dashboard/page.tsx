@@ -158,7 +158,7 @@ async function KaryawanDashboard({ profile }: { profile: { id: string; nama: str
           ) : uncheckedItems.length === 0 ? (
             <div className="px-4 py-6 text-center">
               <p className="text-[13px] font-medium text-sage">Semua tugas sudah selesai! 🎉</p>
-              <p className="mt-1 text-[12px] text-text-dim">Menunggu verifikasi owner</p>
+              <p className="mt-1 text-[12px] text-text-dim">Menunggu verifikasi Mas Arya/Mbak Syafira</p>
             </div>
           ) : (
             uncheckedItems.map((item, i) => (
@@ -285,7 +285,7 @@ async function OwnerDashboard({ profile }: { profile: { id: string; nama: string
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-2 px-5">
         <StatTile
-          label="Karyawan"
+          label="Anggota"
           value={String(checklists.length)}
           sub="aktif hari ini"
         />
@@ -345,7 +345,7 @@ async function OwnerDashboard({ profile }: { profile: { id: string; nama: string
       {/* Poin karyawan */}
       {karyawanPoints && karyawanPoints.length > 0 && (
         <div className="px-5 pt-5">
-          <SectionHeader label="Poin Karyawan" href="/karyawan" action="Lihat semua" />
+          <SectionHeader label="Poin Anggota" href="/karyawan" action="Lihat semua" />
           <div className="overflow-hidden rounded-[10px] border border-border bg-surface">
             {karyawanPoints.map((k, i) => (
               <div
@@ -377,7 +377,7 @@ async function OwnerDashboard({ profile }: { profile: { id: string; nama: string
         <div className="grid grid-cols-2 gap-2">
           <ActionTile href="/resi" icon={<TruckIcon />} title="Upload Resi" sub={`${resiHariIni} hari ini`} />
           <ActionTile href="/pesanan" icon={<BagIcon />} title="Pesanan" sub={`${pesananPending} pending`} />
-          <ActionTile href="/karyawan" icon={<UsersIcon />} title="Karyawan" sub="Data & poin" />
+          <ActionTile href="/karyawan" icon={<UsersIcon />} title="Anggota" sub="Data & poin" />
           <ActionTile href="/gaji" icon={<WalletIcon />} title="Gaji" sub="Rekap bulanan" />
         </div>
       </div>

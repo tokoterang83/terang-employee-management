@@ -42,7 +42,7 @@ export default async function KaryawanPage() {
         <a href="/dashboard" className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-border bg-surface text-text">
           <BackIcon />
         </a>
-        <p className="text-[14px] font-semibold text-text">Data Karyawan</p>
+        <p className="text-[14px] font-semibold text-text">Data Anggota</p>
         <div className="h-8 w-8" />
       </div>
 
@@ -52,10 +52,10 @@ export default async function KaryawanPage() {
           Manajemen
         </p>
         <h1 className="mt-1 text-[24px] font-semibold leading-tight tracking-tight text-text">
-          Karyawan
+          Anggota
         </h1>
         <p className="mt-1.5 text-[13px] text-text-sec">
-          {karyawanList.length} karyawan terdaftar
+          {karyawanList.length} anggota terdaftar
         </p>
       </div>
 
@@ -63,7 +63,7 @@ export default async function KaryawanPage() {
       <div className="mx-5">
         {karyawanList.length === 0 ? (
           <div className="rounded-[10px] border border-border bg-surface px-4 py-10 text-center">
-            <p className="text-[13px] text-text-dim">Belum ada karyawan terdaftar</p>
+            <p className="text-[13px] text-text-dim">Belum ada anggota terdaftar</p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-[10px] border border-border bg-surface">
@@ -113,7 +113,7 @@ export default async function KaryawanPage() {
           className="flex items-center justify-between rounded-[10px] border border-border bg-surface px-4 py-3.5"
         >
           <div>
-            <p className="text-[13.5px] font-semibold text-text">Kelola SOP Karyawan</p>
+            <p className="text-[13.5px] font-semibold text-text">Kelola SOP Anggota</p>
             <p className="text-[12px] text-text-dim mt-0.5">Tambah, edit, hapus item SOP</p>
           </div>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B887D" strokeWidth="1.5" strokeLinecap="round"><path d="M9 5l7 7-7 7"/></svg>
