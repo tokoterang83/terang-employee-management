@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import {
   ToggleChecklistItemSchema,
   VerifyChecklistItemSchema,
@@ -64,7 +65,9 @@ async function syncChecklistItems(
 
   if (!sopItems || sopItems.length === 0) return;
 
-  await supabase
+  // Pakai admin client karena karyawan tidak punya izin INSERT ke checklist_items (hanya trigger DB)
+  const admin = createAdminClient();
+  await admin
     .from("checklist_items")
     .insert(sopItems.map((si) => ({ checklist_id: checklistId, sop_item_id: si.id })));
 }
