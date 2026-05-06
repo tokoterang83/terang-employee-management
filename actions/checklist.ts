@@ -85,7 +85,7 @@ export async function getOrCreateTodayChecklist(): Promise<
   // Coba ambil yang sudah ada
   let { data: existing } = await supabase
     .from("checklist_daily")
-    .select("*, checklist_items(*, sop_items(teks_item, urutan))")
+    .select("*, checklist_items(*, sop_items(teks_item, urutan, template_id, sop_templates(id, nama_sop, sub_judul)))")
     .eq("karyawan_id", user.id)
     .eq("tanggal", today)
     .single();
@@ -95,7 +95,7 @@ export async function getOrCreateTodayChecklist(): Promise<
     await syncChecklistItems(supabase, existing.id, user.id, today);
     const { data: refreshed } = await supabase
       .from("checklist_daily")
-      .select("*, checklist_items(*, sop_items(teks_item, urutan))")
+      .select("*, checklist_items(*, sop_items(teks_item, urutan, template_id, sop_templates(id, nama_sop, sub_judul)))")
       .eq("id", existing.id)
       .single();
     if (refreshed) existing = refreshed;
@@ -109,7 +109,7 @@ export async function getOrCreateTodayChecklist(): Promise<
   const { data: created, error } = await supabase
     .from("checklist_daily")
     .insert({ karyawan_id: user.id, tanggal: today })
-    .select("*, checklist_items(*, sop_items(teks_item, urutan))")
+    .select("*, checklist_items(*, sop_items(teks_item, urutan, template_id, sop_templates(id, nama_sop, sub_judul)))")
     .single();
 
   if (error || !created) {
@@ -172,7 +172,7 @@ export async function getTodayChecklistsAll(): Promise<
   const { data, error } = await supabase
     .from("checklist_daily")
     .select(
-      "*, profiles(nama), checklist_items(*, sop_items(teks_item, urutan))"
+      "*, profiles(nama), checklist_items(*, sop_items(teks_item, urutan, template_id, sop_templates(id, nama_sop, sub_judul)))"
     )
     .eq("tanggal", today)
     .order("created_at");

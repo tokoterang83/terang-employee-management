@@ -21,7 +21,6 @@ export const UpdateGajiPokokSchema = z.object({
 
 // ---- SOP Templates ----
 export const CreateSopTemplateSchema = z.object({
-  karyawan_id: z.string().uuid("ID karyawan tidak valid"),
   nama_sop: z.string().min(1, "Judul SOP wajib diisi"),
   sub_judul: z.string().optional().nullable(),
   deskripsi: z.string().optional().nullable(),
