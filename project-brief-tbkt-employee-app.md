@@ -375,8 +375,8 @@ Database adalah otak dari aplikasi; jika strukturnya salah, maka seluruh fitur d
 - [x] Deployment ke Vercel — *2026-05-06* (`terang-employee-management.vercel.app`)
 - [x] Redesign SOP: global library + daily assignment per anggota — *2026-05-06*
 - [x] Checklist grouped accordion per judul SOP — *2026-05-06*
-- [ ] Env vars production (pastikan semua key terset di Vercel dashboard)
-- [ ] Jalankan 3 migration SQL yang pending di Supabase SQL Editor:
+- [x] Env vars production (pastikan semua key terset di Vercel dashboard)
+- [x] Jalankan 3 migration SQL yang pending di Supabase SQL Editor:
   - `20260506000001_sop_sub_judul_deskripsi.sql`
   - `20260506000002_sop_daily_assignments.sql`
   - `20260506000003_fix_sop_daily_assignments_pk.sql`

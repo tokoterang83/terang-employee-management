@@ -26,24 +26,11 @@ export const CreateSopTemplateSchema = z.object({
   deskripsi: z.string().optional().nullable(),
 });
 
-export const UpdateSopTemplateSchema = z.object({
-  id: z.string().uuid(),
-  nama_sop: z.string().min(1, "Judul SOP wajib diisi"),
-  sub_judul: z.string().optional().nullable(),
-  deskripsi: z.string().optional().nullable(),
-});
-
 // ---- SOP Items ----
 export const CreateSopItemSchema = z.object({
   template_id: z.string().uuid(),
   teks_item: z.string().min(1, "Teks item wajib diisi"),
   urutan: z.number().int().min(0).default(0),
-});
-
-export const UpdateSopItemSchema = z.object({
-  id: z.string().uuid(),
-  teks_item: z.string().min(1, "Teks item wajib diisi"),
-  urutan: z.number().int().min(0).optional(),
 });
 
 // ---- Checklist ----

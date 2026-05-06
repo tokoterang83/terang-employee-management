@@ -4,9 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import {
   CreateSopTemplateSchema,
-  UpdateSopTemplateSchema,
   CreateSopItemSchema,
-  UpdateSopItemSchema,
 } from "@/lib/validations";
 import { createAdminClient } from "@/utils/supabase/admin";
 import type { ActionResult, SopItem, SopTemplate } from "@/lib/types";
@@ -40,34 +38,6 @@ export async function createSopTemplate(
   revalidatePath("/sop");
   revalidatePath("/checklist");
   return { success: true, data };
-}
-
-// Owner: update nama SOP template
-export async function updateSopTemplate(
-  formData: FormData
-): Promise<ActionResult> {
-  const raw = {
-    id: formData.get("id") as string,
-    nama_sop: formData.get("nama_sop") as string,
-  };
-
-  const parsed = UpdateSopTemplateSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("sop_templates")
-    .update({ nama_sop: parsed.data.nama_sop })
-    .eq("id", parsed.data.id);
-
-  if (error) {
-    return { success: false, error: "Gagal update SOP template" };
-  }
-
-  revalidatePath("/sop");
-  return { success: true, data: undefined };
 }
 
 // Owner: hapus SOP template (cascade ke sop_items)
@@ -119,36 +89,6 @@ export async function createSopItem(
   return { success: true, data };
 }
 
-// Owner: update teks/urutan item SOP
-export async function updateSopItem(
-  formData: FormData
-): Promise<ActionResult> {
-  const raw = {
-    id: formData.get("id") as string,
-    teks_item: formData.get("teks_item") as string,
-    urutan: formData.get("urutan") ? Number(formData.get("urutan")) : undefined,
-  };
-
-  const parsed = UpdateSopItemSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
-  }
-
-  const { id, ...updates } = parsed.data;
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("sop_items")
-    .update(updates)
-    .eq("id", id);
-
-  if (error) {
-    return { success: false, error: "Gagal update item SOP" };
-  }
-
-  revalidatePath("/sop");
-  return { success: true, data: undefined };
-}
-
 // Owner: hapus item SOP
 export async function deleteSopItem(itemId: string): Promise<ActionResult> {
   const supabase = await createClient();
@@ -163,85 +103,6 @@ export async function deleteSopItem(itemId: string): Promise<ActionResult> {
 
   revalidatePath("/sop");
   return { success: true, data: undefined };
-}
-
-// Owner: upsert daily assignment (siapa yang dapat SOP ini hari ini)
-export async function upsertSopDailyAssignment(
-  templateId: string,
-  karyawanId: string | null,
-  tanggal: string
-): Promise<ActionResult> {
-  const supabase = await createClient();
-
-  if (!karyawanId) {
-    const { error } = await supabase
-      .from("sop_daily_assignments")
-      .delete()
-      .eq("template_id", templateId)
-      .eq("tanggal", tanggal);
-    if (error) return { success: false, error: "Gagal hapus assignment" };
-    revalidatePath("/sop");
-    return { success: true, data: undefined };
-  }
-
-  const { error } = await supabase
-    .from("sop_daily_assignments")
-    .upsert({ template_id: templateId, karyawan_id: karyawanId, tanggal }, { onConflict: "template_id,tanggal" });
-
-  if (error) return { success: false, error: "Gagal simpan assignment" };
-  revalidatePath("/sop");
-  return { success: true, data: undefined };
-}
-
-// Owner: ambil semua daily assignments untuk tanggal tertentu
-export async function getSopDailyAssignments(
-  tanggal: string
-): Promise<ActionResult<{ template_id: string; karyawan_id: string }[]>> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("sop_daily_assignments")
-    .select("template_id, karyawan_id")
-    .eq("tanggal", tanggal);
-
-  if (error) return { success: false, error: "Gagal memuat assignments" };
-  return { success: true, data: data ?? [] };
-}
-
-// Karyawan: lihat SOP miliknya (dengan items)
-export async function getMySopTemplates(): Promise<
-  ActionResult<(SopTemplate & { sop_items: SopItem[] })[]>
-> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("sop_templates")
-    .select("*, sop_items(id, urutan, teks_item, created_at, template_id)")
-    .order("created_at")
-    .order("urutan", { referencedTable: "sop_items" });
-
-  if (error) {
-    return { success: false, error: "Gagal memuat SOP" };
-  }
-
-  return { success: true, data: data ?? [] };
-}
-
-// Owner: lihat SOP karyawan tertentu (dengan items)
-export async function getSopByKaryawan(
-  karyawanId: string
-): Promise<ActionResult<(SopTemplate & { sop_items: SopItem[] })[]>> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("sop_templates")
-    .select("*, sop_items(id, urutan, teks_item, created_at, template_id)")
-    .eq("karyawan_id", karyawanId)
-    .order("created_at")
-    .order("urutan", { referencedTable: "sop_items" });
-
-  if (error) {
-    return { success: false, error: "Gagal memuat SOP" };
-  }
-
-  return { success: true, data: data ?? [] };
 }
 
 // Owner: ambil assignment SOP untuk karyawan tertentu di tanggal tertentu
