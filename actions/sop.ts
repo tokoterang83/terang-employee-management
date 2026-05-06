@@ -165,6 +165,48 @@ export async function deleteSopItem(itemId: string): Promise<ActionResult> {
   return { success: true, data: undefined };
 }
 
+// Owner: upsert daily assignment (siapa yang dapat SOP ini hari ini)
+export async function upsertSopDailyAssignment(
+  templateId: string,
+  karyawanId: string | null,
+  tanggal: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  if (!karyawanId) {
+    const { error } = await supabase
+      .from("sop_daily_assignments")
+      .delete()
+      .eq("template_id", templateId)
+      .eq("tanggal", tanggal);
+    if (error) return { success: false, error: "Gagal hapus assignment" };
+    revalidatePath("/sop");
+    return { success: true, data: undefined };
+  }
+
+  const { error } = await supabase
+    .from("sop_daily_assignments")
+    .upsert({ template_id: templateId, karyawan_id: karyawanId, tanggal }, { onConflict: "template_id,tanggal" });
+
+  if (error) return { success: false, error: "Gagal simpan assignment" };
+  revalidatePath("/sop");
+  return { success: true, data: undefined };
+}
+
+// Owner: ambil semua daily assignments untuk tanggal tertentu
+export async function getSopDailyAssignments(
+  tanggal: string
+): Promise<ActionResult<{ template_id: string; karyawan_id: string }[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("sop_daily_assignments")
+    .select("template_id, karyawan_id")
+    .eq("tanggal", tanggal);
+
+  if (error) return { success: false, error: "Gagal memuat assignments" };
+  return { success: true, data: data ?? [] };
+}
+
 // Karyawan: lihat SOP miliknya (dengan items)
 export async function getMySopTemplates(): Promise<
   ActionResult<(SopTemplate & { sop_items: SopItem[] })[]>

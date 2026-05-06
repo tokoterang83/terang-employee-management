@@ -17,17 +17,26 @@ export default async function SopPage() {
   if (!profileResult.success) redirect("/login");
   if (profileResult.data.role !== "owner") redirect("/dashboard");
 
+  const today = new Date().toISOString().split("T")[0];
+
   const karyawanResult = await getKaryawanList();
   const karyawanList = karyawanResult.success ? karyawanResult.data : [];
 
   const supabase = await createClient();
-  const { data: allTemplates } = await supabase
-    .from("sop_templates")
-    .select("*, sop_items(id, urutan, teks_item, created_at, template_id)")
-    .order("created_at")
-    .order("urutan", { referencedTable: "sop_items" });
+  const [{ data: allTemplates }, { data: todayAssignments }] = await Promise.all([
+    supabase
+      .from("sop_templates")
+      .select("*, sop_items(id, urutan, teks_item, created_at, template_id)")
+      .order("created_at")
+      .order("urutan", { referencedTable: "sop_items" }),
+    supabase
+      .from("sop_daily_assignments")
+      .select("template_id, karyawan_id")
+      .eq("tanggal", today),
+  ]);
 
   const templates = allTemplates ?? [];
+  const assignments = todayAssignments ?? [];
 
   return (
     <div className="flex flex-col pb-4">
@@ -53,7 +62,12 @@ export default async function SopPage() {
         </p>
       </div>
 
-      <SopManager karyawanList={karyawanList} initialTemplates={templates as any} />
+      <SopManager
+        karyawanList={karyawanList}
+        initialTemplates={templates as any}
+        todayAssignments={assignments}
+        today={today}
+      />
     </div>
   );
 }
