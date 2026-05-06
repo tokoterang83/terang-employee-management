@@ -261,3 +261,89 @@ export async function finalizeChecklistVerification(
   revalidatePath("/dashboard");
   return { success: true, data: undefined };
 }
+
+// Owner: siapkan (reset + isi ulang) checklist semua anggota untuk tanggal tertentu
+export async function prepareAllChecklists(
+  tanggal: string
+): Promise<ActionResult<{ count: number }>> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Tidak terautentikasi" };
+
+  const admin = createAdminClient();
+
+  const { data: karyawanList } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("role", "karyawan");
+
+  if (!karyawanList || karyawanList.length === 0) {
+    return { success: false, error: "Tidak ada anggota terdaftar" };
+  }
+
+  const { data: allDailyAssignments } = await admin
+    .from("sop_daily_assignments")
+    .select("template_id, karyawan_id")
+    .eq("tanggal", tanggal);
+
+  const overriddenTemplateIds = new Set(
+    (allDailyAssignments ?? []).map((a) => a.template_id)
+  );
+
+  let count = 0;
+
+  for (const karyawan of karyawanList) {
+    const templateIds = new Set<string>();
+
+    (allDailyAssignments ?? [])
+      .filter((a) => a.karyawan_id === karyawan.id)
+      .forEach((a) => templateIds.add(a.template_id));
+
+    const { data: permanent } = await admin
+      .from("sop_templates")
+      .select("id")
+      .eq("karyawan_id", karyawan.id);
+    permanent?.forEach((t) => {
+      if (!overriddenTemplateIds.has(t.id)) templateIds.add(t.id);
+    });
+
+    if (templateIds.size === 0) continue;
+
+    const { data: sopItems } = await admin
+      .from("sop_items")
+      .select("id")
+      .in("template_id", [...templateIds]);
+
+    if (!sopItems || sopItems.length === 0) continue;
+
+    let { data: checklist } = await admin
+      .from("checklist_daily")
+      .select("id")
+      .eq("karyawan_id", karyawan.id)
+      .eq("tanggal", tanggal)
+      .single();
+
+    if (!checklist) {
+      const { data: created } = await admin
+        .from("checklist_daily")
+        .insert({ karyawan_id: karyawan.id, tanggal, status_verif: "pending" })
+        .select("id")
+        .single();
+      checklist = created;
+    }
+
+    if (!checklist) continue;
+
+    await admin.from("checklist_items").delete().eq("checklist_id", checklist.id);
+    await admin.from("checklist_items").insert(
+      sopItems.map((si) => ({ checklist_id: checklist!.id, sop_item_id: si.id }))
+    );
+
+    count++;
+  }
+
+  revalidatePath("/checklist");
+  revalidatePath("/sop");
+  revalidatePath("/dashboard");
+  return { success: true, data: { count } };
+}

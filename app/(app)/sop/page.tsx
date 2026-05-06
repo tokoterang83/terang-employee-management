@@ -3,6 +3,7 @@ import { getProfile } from "@/actions/auth";
 import { getKaryawanList } from "@/actions/karyawan";
 import { createClient } from "@/utils/supabase/server";
 import { SopManager } from "./sop-manager";
+import { PrepareChecklistBtn } from "./prepare-btn";
 
 function BackIcon() {
   return (
@@ -61,6 +62,8 @@ export default async function SopPage() {
           {templates.length} SOP dibuat · {karyawanList.length} anggota
         </p>
       </div>
+
+      <PrepareChecklistBtn today={today} />
 
       <SopManager
         karyawanList={karyawanList}
