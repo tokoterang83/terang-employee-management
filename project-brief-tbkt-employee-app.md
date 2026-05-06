@@ -137,8 +137,9 @@ Diterima → Diproses → Siap → Selesai
 users              -- dari Supabase Auth, extended dengan profiles
 profiles           -- id, nama, role (owner/karyawan), gaji_pokok
 
-sop_templates      -- id, karyawan_id, nama_sop, created_at
+sop_templates      -- id, karyawan_id (nullable), nama_sop, sub_judul, deskripsi, created_at
 sop_items          -- id, template_id, urutan, teks_item
+sop_daily_assignments -- template_id, karyawan_id, tanggal | PK (template_id, karyawan_id, tanggal)
 
 checklist_daily    -- id, karyawan_id, tanggal, status_verif (pending/done)
 checklist_items    -- id, checklist_id, sop_item_id, is_checked, is_verified, point_delta
@@ -151,6 +152,12 @@ pesanan_manual     -- id, nama_pemesan, kontak, detail, jenis, catatan, status, 
 
 gaji_bulanan       -- id, karyawan_id, bulan, tahun, gaji_pokok, bonus, catatan_bonus, status_bayar
 ```
+
+**Catatan penting perubahan schema (2026-05-06):**
+- `sop_templates.karyawan_id` sekarang **nullable** — SOP bersifat global, tidak harus dimiliki satu karyawan
+- `sop_daily_assignments` adalah tabel baru untuk assignment SOP per hari per anggota
+- Trigger `populate_checklist_items` diperbarui: cek daily assignment dulu, fallback ke `karyawan_id` permanen jika tidak ada
+- 1 SOP bisa di-assign ke banyak anggota di hari yang sama (PK mencakup `karyawan_id`)
 
 ---
 
@@ -239,6 +246,7 @@ Database adalah otak dari aplikasi; jika strukturnya salah, maka seluruh fitur d
 
 ### Tahap 4 — Finalisasi: Storage & Deployment ✅ SELESAI (2026-05-06)
 
+
 > **Env vars:** `terang-app/.env.local` — 3 keys: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SERVICE_ROLE_KEY
 > **Admin client:** `terang-app/utils/supabase/admin.ts` — pakai service role key, hanya dipakai di Server Actions
 
@@ -248,7 +256,76 @@ Database adalah otak dari aplikasi; jika strukturnya salah, maka seluruh fitur d
 - **Deployment ke Vercel:** Belum dilakukan — next step
 - **Test end-to-end:** Belum dilakukan — setelah deploy
 
-### Perbaikan & Fitur Tambahan (2026-05-06)
+---
+
+### Sesi Update 2026-05-06 — GitHub, Deploy, Redesign SOP & Checklist
+
+#### A. GitHub & Deployment Setup
+
+- ✅ **GitHub push ke akun tokoterang83** — setup SSH key terpisah (`~/.ssh/id_tokoterang83`) dengan host alias `github-terang` di `~/.ssh/config`; remote URL: `git@github-terang:tokoterang83/terang-employee-management.git`
+- ✅ **Restrukturisasi folder** — isi `terang-app/` dipindah ke root repo agar Vercel bisa deploy dengan `Root Directory = ./` tanpa konfigurasi tambahan
+- ✅ **Deployment ke Vercel** — project terhubung ke akun `tokoterang83`, live di `terang-employee-management.vercel.app`
+
+#### B. Perubahan Terminologi (seluruh UI)
+
+| Sebelum | Sesudah |
+|---|---|
+| Karyawan (label UI) | Anggota |
+| Bos / owner (label UI) | Mas Arya/Mbak Syafira |
+
+> Catatan: variable name, kolom DB, dan role string (`"owner"`, `"karyawan"`) tidak diubah — hanya teks yang tampil ke pengguna.
+
+#### C. Enhancement SOP Form
+
+- ✅ Kolom baru di `sop_templates`: `sub_judul` (nullable) dan `deskripsi` (nullable)
+- ✅ Form buat SOP kini punya 3 field: **Judul**, **Sub-judul** (opsional), **Deskripsi** (opsional)
+- ✅ SOP card menampilkan sub_judul (warna sage) dan deskripsi di bawah judul
+- Migration: `20260506000001_sop_sub_judul_deskripsi.sql`
+
+#### D. Redesign Total Sistem SOP Assignment
+
+**Masalah lama:** SOP terikat permanen ke 1 karyawan. Shift acak, sehingga tidak fleksibel.
+
+**Arsitektur baru:**
+- SOP template bersifat **global** (tidak harus punya `karyawan_id`)
+- Tabel `sop_daily_assignments (template_id, karyawan_id, tanggal)` untuk assignment harian
+- 1 SOP bisa di-assign ke banyak anggota sekaligus di hari yang sama
+- Trigger checklist diperbarui: cek daily assignment → fallback ke `karyawan_id` permanen
+
+**Halaman SOP (owner) — 2 tab:**
+- **Tab "Tugaskan"** (default):
+  1. Pilih anggota (chip/tab horizontal)
+  2. Pilih SOP dari library via checkbox (multi-select)
+  3. Pilih jadwal: Hari ini / Besok / Lusa
+  4. Klik **"Siapkan"** → assignment tersimpan + checklist karyawan langsung di-reset dan diisi ulang
+- **Tab "Library SOP"**: CRUD global SOP (tambah/hapus template + tambah/hapus item), collapsible per SOP
+
+**Server actions baru di `actions/sop.ts`:**
+- `assignSopsToKaryawan(karyawanId, templateIds[], tanggal)` — hapus assignment lama + insert baru + reset checklist
+- `getAssignmentsByKaryawan(karyawanId, tanggal)` — untuk load state checkbox saat ganti anggota/tanggal
+
+**Migrations:**
+- `20260506000002_sop_daily_assignments.sql` — buat tabel, RLS, update trigger
+- `20260506000003_fix_sop_daily_assignments_pk.sql` — fix PK ke `(template_id, karyawan_id, tanggal)`
+
+#### E. Redesign Tampilan Checklist Karyawan — Grouped Accordion
+
+**Sebelum:** Flat list semua item tanpa pengelompokan.
+
+**Sesudah:** Item dikelompokkan per SOP template, tampil sebagai accordion:
+- Header: nama SOP + sub_judul + badge progress `X/Y` (warna hijau jika semua selesai)
+- Header bisa diklik untuk collapse/expand
+- Body: daftar item SOP dengan checkbox + tag status
+- Query diperbarui untuk include `sop_items.sop_templates(id, nama_sop, sub_judul)`
+
+#### F. Fix Teknis Kritis
+
+- ✅ **RLS bypass untuk INSERT checklist_items** — karyawan tidak punya izin INSERT (hanya trigger DB). Fungsi `syncChecklistItems` dan `assignSopsToKaryawan` kini pakai `createAdminClient()` (service role) untuk operasi ini
+- ✅ **Auto-sync checklist kosong** — `getOrCreateTodayChecklist` kini mendeteksi checklist yang sudah ada tapi 0 item (terjadi jika karyawan buka app sebelum SOP di-assign), lalu populate ulang otomatis via admin client
+
+---
+
+### Perbaikan & Fitur Tambahan Awal Sesi (2026-05-06)
 
 **Refactoring kode:**
 - ✅ `revalidatePath` ditambahkan ke semua 14 mutating server actions (checklist, resi, pesanan, sop, gaji, karyawan) — halaman Server Component kini auto-refresh setelah mutasi tanpa perlu manual reload
@@ -294,7 +371,15 @@ Database adalah otak dari aplikasi; jika strukturnya salah, maka seluruh fitur d
 - [x] Modul Gaji & Bonus — *2026-05-05*
 
 ### Phase 3 — Polish & Android
-- [ ] Setup Storage + Deployment ke Vercel (Tahap 4)
+- [x] Setup Storage (Tahap 4) — *2026-05-06*
+- [x] Deployment ke Vercel — *2026-05-06* (`terang-employee-management.vercel.app`)
+- [x] Redesign SOP: global library + daily assignment per anggota — *2026-05-06*
+- [x] Checklist grouped accordion per judul SOP — *2026-05-06*
+- [ ] Env vars production (pastikan semua key terset di Vercel dashboard)
+- [ ] Jalankan 3 migration SQL yang pending di Supabase SQL Editor:
+  - `20260506000001_sop_sub_judul_deskripsi.sql`
+  - `20260506000002_sop_daily_assignments.sql`
+  - `20260506000003_fix_sop_daily_assignments_pk.sql`
 - [ ] PWA manifest
 - [ ] Wrap ke Android dengan Capacitor
 
