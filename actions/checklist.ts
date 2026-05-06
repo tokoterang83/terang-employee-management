@@ -1,0 +1,192 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/utils/supabase/server";
+import {
+  ToggleChecklistItemSchema,
+  VerifyChecklistItemSchema,
+} from "@/lib/validations";
+import type {
+  ActionResult,
+  ChecklistDaily,
+  ChecklistItem,
+} from "@/lib/types";
+
+// Karyawan: ambil atau buat checklist hari ini
+export async function getOrCreateTodayChecklist(): Promise<
+  ActionResult<ChecklistDaily & { checklist_items: (ChecklistItem & { sop_items: { teks_item: string; urutan: number } | null })[] }>
+> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Tidak terautentikasi" };
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // Coba ambil yang sudah ada
+  let { data: existing } = await supabase
+    .from("checklist_daily")
+    .select("*, checklist_items(*, sop_items(teks_item, urutan))")
+    .eq("karyawan_id", user.id)
+    .eq("tanggal", today)
+    .single();
+
+  if (existing) {
+    return { success: true, data: existing as typeof existing & { checklist_items: (ChecklistItem & { sop_items: { teks_item: string; urutan: number } | null })[] } };
+  }
+
+  // Buat baru — trigger auto-populate items dari SOP
+  const { data: created, error } = await supabase
+    .from("checklist_daily")
+    .insert({ karyawan_id: user.id, tanggal: today })
+    .select("*, checklist_items(*, sop_items(teks_item, urutan))")
+    .single();
+
+  if (error || !created) {
+    return { success: false, error: "Gagal membuat checklist hari ini" };
+  }
+
+  return { success: true, data: created as typeof created & { checklist_items: (ChecklistItem & { sop_items: { teks_item: string; urutan: number } | null })[] } };
+}
+
+// Karyawan: centang/hapus centang item checklist
+export async function toggleChecklistItem(
+  formData: FormData
+): Promise<ActionResult> {
+  const raw = {
+    checklist_item_id: formData.get("checklist_item_id") as string,
+    is_checked: formData.get("is_checked") === "true",
+  };
+
+  const parsed = ToggleChecklistItemSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("checklist_items")
+    .update({ is_checked: parsed.data.is_checked })
+    .eq("id", parsed.data.checklist_item_id);
+
+  if (error) {
+    // RLS akan reject jika checklist sudah diverifikasi
+    return {
+      success: false,
+      error:
+        error.code === "42501"
+          ? "Checklist sudah diverifikasi, tidak bisa diubah"
+          : "Gagal update checklist",
+    };
+  }
+
+  revalidatePath("/checklist");
+  revalidatePath("/dashboard");
+  return { success: true, data: undefined };
+}
+
+// Owner: lihat semua checklist hari ini (semua karyawan)
+export async function getTodayChecklistsAll(): Promise<
+  ActionResult<
+    (ChecklistDaily & {
+      profiles: { nama: string } | null;
+      checklist_items: (ChecklistItem & {
+        sop_items: { teks_item: string; urutan: number } | null;
+      })[];
+    })[]
+  >
+> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabase
+    .from("checklist_daily")
+    .select(
+      "*, profiles(nama), checklist_items(*, sop_items(teks_item, urutan))"
+    )
+    .eq("tanggal", today)
+    .order("created_at");
+
+  if (error) {
+    return { success: false, error: "Gagal memuat checklist" };
+  }
+
+  return { success: true, data: (data ?? []) as typeof data & [] };
+}
+
+// Owner: lihat histori checklist karyawan tertentu
+export async function getChecklistHistoryByKaryawan(
+  karyawanId: string,
+  limit = 30
+): Promise<ActionResult<ChecklistDaily[]>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("checklist_daily")
+    .select("*")
+    .eq("karyawan_id", karyawanId)
+    .order("tanggal", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return { success: false, error: "Gagal memuat histori checklist" };
+  }
+
+  return { success: true, data: data ?? [] };
+}
+
+// Owner: verifikasi satu item checklist (+1/-1 point)
+// Trigger di DB yang auto-log poin ke point_log
+export async function verifyChecklistItem(
+  formData: FormData
+): Promise<ActionResult> {
+  const raw = {
+    checklist_item_id: formData.get("checklist_item_id") as string,
+    is_verified: formData.get("is_verified") === "true",
+  };
+
+  const parsed = VerifyChecklistItemSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("checklist_items")
+    .update({ is_verified: parsed.data.is_verified })
+    .eq("id", parsed.data.checklist_item_id);
+
+  if (error) {
+    return { success: false, error: "Gagal verifikasi item" };
+  }
+
+  revalidatePath("/checklist");
+  revalidatePath("/dashboard");
+  return { success: true, data: undefined };
+}
+
+// Owner: selesaikan verifikasi seluruh checklist harian
+// Update status_verif + verified_at + verified_by di checklist_daily
+export async function finalizeChecklistVerification(
+  checklistId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Tidak terautentikasi" };
+
+  const { error } = await supabase
+    .from("checklist_daily")
+    .update({
+      status_verif: "verified",
+      verified_at: new Date().toISOString(),
+      verified_by: user.id,
+    })
+    .eq("id", checklistId);
+
+  if (error) {
+    return { success: false, error: "Gagal menyelesaikan verifikasi" };
+  }
+
+  revalidatePath("/checklist");
+  revalidatePath("/dashboard");
+  return { success: true, data: undefined };
+}

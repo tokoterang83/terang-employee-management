@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warm neutrals */
+  --color-bg: #FAF8F5;
+  --color-bg2: #F4F1EA;
+  --color-bg3: #EFEBE2;
+  --color-surface: #FFFFFF;
+  --color-hover: #F0EDE5;
+
+  /* Sage */
+  --color-sage: #586D57;
+  --color-sage-dark: #3F4F3F;
+  --color-sage-deep: #2B362B;
+  --color-sage-soft: #E8EBE5;
+  --color-sage-mid: #D5DCD2;
+
+  /* Borders */
+  --color-border: #E8E3D8;
+  --color-border-hi: #DDD7C8;
+  --color-border-sage: #CDD4C9;
+
+  /* Text */
+  --color-text: #2B362B;
+  --color-text-sec: #5C5A52;
+  --color-text-dim: #8B887D;
+  --color-text-mute: #B5B1A4;
+
+  /* Status */
+  --color-amber: #A8722C;
+  --color-amber-soft: #F2E8D7;
+  --color-danger: #9C4A3A;
+  --color-danger-soft: #EFD9D2;
+  --color-info: #4A6B8C;
+  --color-info-soft: #D9E2EC;
+
+  /* Fonts */
+  --font-sans: var(--font-jakarta), -apple-system, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, 'SF Mono', monospace;
+
+  /* Radius */
+  --radius-card: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #FAF8F5;
+  color: #2B362B;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scrollbar minimal */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5DCD2;
+  border-radius: 99px;
+}
