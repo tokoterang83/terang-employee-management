@@ -244,6 +244,28 @@ Database adalah otak dari aplikasi; jika strukturnya salah, maka seluruh fitur d
 - `proxy.ts` menggantikan `middleware.ts` — fungsi harus bernama `proxy` (bukan `middleware`)
 - Build: `✓ Compiled successfully` — 0 error, 11 routes
 
+### Sesi Update 2026-05-07 — Download Resi, Deskripsi Pesanan & Refactor
+
+#### A. Fitur Baru: Download Resi + Deskripsi Pesanan
+
+**Masalah:** Karyawan tidak bisa download PDF resi sebelum packing; owner tidak bisa mencatat isi pesanan saat upload.
+
+**Perubahan:**
+- ✅ **Migration `20260507000000_add_deskripsi_pesanan_to_resi.sql`** — kolom baru `deskripsi_pesanan text` (nullable) di tabel `resi_online`
+- ✅ **Form upload resi (owner)** — textarea "Isi Pesanan" (opsional) untuk mencatat item buku pesanan
+- ✅ **Halaman resi karyawan** — tombol `↓ Download PDF` tampil di semua status (Baru/Packing/Siap Kirim/Terkirim), bukan hanya setelah packing
+- ✅ **Deskripsi pesanan** — tampil di kartu resi sisi karyawan dan list resi sisi owner
+- File baru: `app/(app)/resi/resi-download-btn.tsx` — client component tombol download (error sebagai button state, tidak mengganggu layout)
+
+#### B. Refactor & Optimasi (dari code review sesi ini)
+
+- ✅ **`upload-resi-form.tsx`** — semua form values dibaca sebelum `await` storage upload (konsistensi); hapus dead imports (`assignResi`, `ResiStatus`)
+- ✅ **`resi-download-btn.tsx`** — hapus wrapper `div` yang merusak alignment di flex row; error ditampilkan sebagai state tombol (merah + teks "Gagal, coba lagi")
+- ✅ **Dashboard** — `karyawan_points` query masuk ke `Promise.all` di kedua dashboard (−1 serial DB round-trip per page load)
+- ✅ **`assignSopsToKaryawan`** — insert assignment baru dan fetch `sop_items` diparallelkan (−1 serial DB round-trip per SOP assign)
+
+---
+
 ### Tahap 4 — Finalisasi: Storage & Deployment ✅ SELESAI (2026-05-06)
 
 
