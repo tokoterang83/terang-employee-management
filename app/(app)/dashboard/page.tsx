@@ -45,19 +45,14 @@ export default async function DashboardPage() {
 }
 
 async function KaryawanDashboard({ profile }: { profile: { id: string; nama: string; role: string; gaji_pokok: number } }) {
-  const [checklistResult, resiResult, supabase] = await Promise.all([
+  const supabase = await createClient();
+  const [checklistResult, resiResult, pointsResult] = await Promise.all([
     getOrCreateTodayChecklist(),
     getMyResi(),
-    createClient(),
+    supabase.from("karyawan_points").select("total_points").eq("id", profile.id).single(),
   ]);
 
-  const { data: pointsData } = await supabase
-    .from("karyawan_points")
-    .select("total_points")
-    .eq("id", profile.id)
-    .single();
-
-  const totalPoin = pointsData?.total_points ?? 0;
+  const totalPoin = pointsResult.data?.total_points ?? 0;
 
   const checklist = checklistResult.success ? checklistResult.data : null;
   const items = checklist?.checklist_items ?? [];
@@ -205,16 +200,15 @@ async function KaryawanDashboard({ profile }: { profile: { id: string; nama: str
 }
 
 async function OwnerDashboard({ profile }: { profile: { id: string; nama: string; role: string; gaji_pokok: number } }) {
-  const [checklistResult, karyawanResiResult, pesananResult] = await Promise.all([
+  const supabase = await createClient();
+  const [checklistResult, karyawanResiResult, pesananResult, pointsResult] = await Promise.all([
     getTodayChecklistsAll(),
     getAllResi(),
     getAllPesanan(),
+    supabase.from("karyawan_points").select("id, nama, total_points"),
   ]);
 
-  const supabase = await createClient();
-  const { data: karyawanPoints } = await supabase
-    .from("karyawan_points")
-    .select("id, nama, total_points");
+  const karyawanPoints = pointsResult.data;
 
   const checklists = checklistResult.success ? checklistResult.data : [];
   const resiList = karyawanResiResult.success ? karyawanResiResult.data : [];

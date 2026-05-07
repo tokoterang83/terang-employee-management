@@ -17,6 +17,7 @@ export async function createResi(
     filename: formData.get("filename") as string,
     storage_path: formData.get("storage_path") as string,
     assigned_to: (formData.get("assigned_to") as string) || null,
+    deskripsi_pesanan: (formData.get("deskripsi_pesanan") as string) || null,
   };
 
   const parsed = CreateResiSchema.safeParse(raw);

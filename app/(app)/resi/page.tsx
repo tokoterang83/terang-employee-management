@@ -3,6 +3,7 @@ import { getProfile } from "@/actions/auth";
 import { getAllResi, getMyResi } from "@/actions/resi";
 import { getKaryawanList } from "@/actions/karyawan";
 import { ResiStatusBtn } from "./resi-status-btn";
+import { ResiDownloadBtn } from "./resi-download-btn";
 import { UploadResiForm } from "./upload-resi-form";
 import type { ResiStatus } from "@/lib/types";
 
@@ -110,6 +111,11 @@ export default async function ResiPage() {
                         {(resi as any).profiles?.nama ?? "Belum di-assign"} ·{" "}
                         {new Date(resi.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                       </p>
+                      {resi.deskripsi_pesanan && (
+                        <p className="mt-1 text-[11px] text-text-sec leading-snug line-clamp-2">
+                          {resi.deskripsi_pesanan}
+                        </p>
+                      )}
                     </div>
                     <span
                       className="flex-shrink-0 rounded-[4px] font-mono text-[10.5px] font-semibold px-1.5 py-0.5"
@@ -179,13 +185,19 @@ export default async function ResiPage() {
                       month: "long",
                     })}
                   </p>
-                  <div className="mt-2 flex items-center gap-2">
+                  {resi.deskripsi_pesanan && (
+                    <p className="mt-1.5 text-[12px] text-text-sec leading-snug whitespace-pre-wrap break-words">
+                      {resi.deskripsi_pesanan}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span
                       className="rounded-[4px] font-mono text-[10.5px] font-semibold px-1.5 py-0.5"
                       style={{ color: sc.color, background: sc.bg }}
                     >
                       {resi.status}
                     </span>
+                    <ResiDownloadBtn storagePath={resi.storage_path} />
                     {resi.status !== "Terkirim" && (
                       <ResiStatusBtn resiId={resi.id} currentStatus={resi.status as ResiStatus} />
                     )}

@@ -129,25 +129,24 @@ export async function assignSopsToKaryawan(
 ): Promise<ActionResult<{ count: number }>> {
   const admin = createAdminClient();
 
-  // Hapus assignment lama untuk karyawan ini di tanggal ini
+  // Hapus assignment lama dulu (harus selesai sebelum insert baru)
   await admin
     .from("sop_daily_assignments")
     .delete()
     .eq("karyawan_id", karyawanId)
     .eq("tanggal", tanggal);
 
-  // Insert assignment baru
-  if (templateIds.length > 0) {
-    await admin.from("sop_daily_assignments").insert(
-      templateIds.map((tid) => ({ template_id: tid, karyawan_id: karyawanId, tanggal }))
-    );
-  }
-
-  // Ambil sop_items dari template yang dipilih
-  const sopItemsResult =
+  // Insert assignment baru + ambil sop_items secara paralel (keduanya independen)
+  const [, sopItemsResult] = await Promise.all([
     templateIds.length > 0
-      ? await admin.from("sop_items").select("id").in("template_id", templateIds)
-      : { data: [] };
+      ? admin.from("sop_daily_assignments").insert(
+          templateIds.map((tid) => ({ template_id: tid, karyawan_id: karyawanId, tanggal }))
+        )
+      : Promise.resolve(null),
+    templateIds.length > 0
+      ? admin.from("sop_items").select("id").in("template_id", templateIds)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+  ]);
 
   const sopItems = sopItemsResult.data ?? [];
 

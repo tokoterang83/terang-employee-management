@@ -69,6 +69,7 @@ export interface ResiOnline {
   assigned_to: string | null;
   status: ResiStatus;
   uploaded_by: string;
+  deskripsi_pesanan: string | null;
   terkirim_at: string | null;
   created_at: string;
 }

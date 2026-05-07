@@ -63,6 +63,7 @@ export const CreateResiSchema = z.object({
   filename: z.string().min(1),
   storage_path: z.string().min(1),
   assigned_to: z.string().uuid().nullable().optional(),
+  deskripsi_pesanan: z.string().optional().nullable(),
 });
 
 // ---- Pesanan Manual ----

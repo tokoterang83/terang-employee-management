@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createResi, assignResi } from "@/actions/resi";
+import { createResi } from "@/actions/resi";
 import { createClient } from "@/utils/supabase/client";
-import type { Profile, ResiStatus } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 
 export function UploadResiForm({ karyawanList }: { karyawanList: Profile[] }) {
   const [isPending, startTransition] = useTransition();
@@ -21,6 +21,7 @@ export function UploadResiForm({ karyawanList }: { karyawanList: Profile[] }) {
     const fileInput = form.elements.namedItem("pdf") as HTMLInputElement;
     const file = fileInput.files?.[0];
     const assignedTo = (form.elements.namedItem("assigned_to") as HTMLSelectElement).value;
+    const deskripsi = (form.elements.namedItem("deskripsi_pesanan") as HTMLTextAreaElement).value.trim();
 
     if (!file) {
       setError("Pilih file PDF terlebih dahulu");
@@ -51,6 +52,7 @@ export function UploadResiForm({ karyawanList }: { karyawanList: Profile[] }) {
     fd.set("filename", file.name);
     fd.set("storage_path", storagePath);
     if (assignedTo) fd.set("assigned_to", assignedTo);
+    if (deskripsi) fd.set("deskripsi_pesanan", deskripsi);
 
     startTransition(async () => {
       const result = await createResi(fd);
@@ -78,7 +80,6 @@ export function UploadResiForm({ karyawanList }: { karyawanList: Profile[] }) {
         </div>
       )}
 
-      {/* File input */}
       <div className="flex flex-col gap-1.5">
         <label className="font-mono text-[10.5px] font-semibold uppercase tracking-wider text-text-dim">
           File PDF Resi
@@ -104,7 +105,18 @@ export function UploadResiForm({ karyawanList }: { karyawanList: Profile[] }) {
         </label>
       </div>
 
-      {/* Assign to */}
+      <div className="flex flex-col gap-1.5">
+        <label className="font-mono text-[10.5px] font-semibold uppercase tracking-wider text-text-dim">
+          Isi Pesanan (opsional)
+        </label>
+        <textarea
+          name="deskripsi_pesanan"
+          rows={3}
+          placeholder="Contoh: Yasin Fatimah x2, Al-Quran Tajwid x1..."
+          className="w-full resize-none rounded-[8px] border border-border bg-bg2 px-4 py-3 text-[14px] text-text placeholder:text-text-dim focus:border-border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+        />
+      </div>
+
       <div className="flex flex-col gap-1.5">
         <label className="font-mono text-[10.5px] font-semibold uppercase tracking-wider text-text-dim">
           Assign ke Karyawan (opsional)
